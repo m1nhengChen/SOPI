@@ -1,2 +1,2 @@
-# Medimage_registration_for_CT-to-X-ray
+# Medical image registration for CT-to-X-ray
 2D/3D registration between CT/X-ray images
