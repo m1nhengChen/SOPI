@@ -1,0 +1,9 @@
+numpy==1.21.6
+opencv_contrib_python==3.4.2.17
+Pillow==9.5.0
+rfconv==0.0.2b20210406
+scikit_learn==1.0.2
+SimpleITK==2.2.1
+torch==1.7.1+cu110
+torchgeometry==0.1.2
+tqdm==4.65.0
