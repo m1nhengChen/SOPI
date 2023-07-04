@@ -17,10 +17,10 @@ x-ray and one pre-operative CT as input.
 ### Prerequisites
 - Linux
 - NVIDIA GPU + CUDA
-- python 3.6 (recommended)
+- python 3.7 (recommended)
 
 ### Getting Started
-- Install torch, torchvision from https://pytorch.org/. It has been tested with torch 1.7.0 and torchvision 0.8.1.
+- Install torch, torchvision from https://pytorch.org/. It has been tested with torch 1.13.0 and torchvision 0.8.1.
 - Check requirements.txt for dependencies. You can use pip install:
 ```bash
 pip install -r requirements.txt
