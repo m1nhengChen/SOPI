@@ -15,7 +15,7 @@ x-ray and one pre-operative CT as input.
 ## Setup
 
 ### Prerequisites
-- Linux or OSX (OSX has CPU support only)
+- Linux
 - NVIDIA GPU + CUDA
 - python 3.6 (recommended)
 
