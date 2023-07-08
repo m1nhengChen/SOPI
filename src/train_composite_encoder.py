@@ -16,7 +16,7 @@ from torch import optim
 from torch.autograd import Variable
 from torch.optim.lr_scheduler import CyclicLR
 
-from module import ProST, Composite_encoder
+from module import ProST, Fine_regnet
 from preprocessing import downsample_single
 from util import input_param, init_rtvec_train
 
@@ -38,10 +38,9 @@ RiemMetric = RiemannianMetric(dim=6)
 METRIC = SE3_GROUP.left_canonical_metric
 riem_dist_fun = RiemMetric.dist
 
-USER_DIR = '/home/chenminheng'  # 'D:/about_my_college_life/Academic/SRTP' #'/home/cmh'
+USER_DIR =  #'/home/cmh'
 DATA_SET = USER_DIR + '/ProSTGrid/Data'
 CT_128_SET = DATA_SET + '/ct/128/all'
-# MASK_SET = DATA_SET + '/mask_frontal'
 MASK_128_SET = DATA_SET + '/mask/128'
 img_files = os.listdir(CT_128_SET)
 ct_list = []
@@ -64,11 +63,11 @@ def train():
     if use_multi_gpu:
         initmodel = ProST().to(device)
         initmodel = nn.DataParallel(initmodel, device_ids=device_ids)
-        model = Composite_encoder().to(device)
+        model = Fine_regnet().to(device)
         model = nn.DataParallel(model, device_ids=device_ids)
     else:
         initmodel = ProST().to(device)
-        model = Composite_encoder().to(device)
+        model = Fine_regnet().to(device)
 
     optimizer = optim.SGD(model.parameters(), lr=1e-3, momentum=0.9)
     scheduler = CyclicLR(optimizer, base_lr=1e-4, max_lr=1e-3, step_size_up=100)
@@ -100,21 +99,13 @@ def train():
     total_loss_list = []
 
     for epoch in range(START_EPOCH, 20000):
-        ## Do Iterative Validation
+        # Do Iterative Validation
         model.train()
         for iter in range(ITER_NUM):
             torch.cuda.empty_cache()
             CT_NAME = np.random.choice(ct_list, 1)[0]
             CT_128_PATH = CT_128_SET + '/' + CT_NAME + '_resampled.nii.gz'
-            # MASK_16_PATH = MASK_SET + '/16/' + CT_NAME + '_mask.nii.gz'
-            # MASK_32_PATH = MASK_SET + '/32/' + CT_NAME + '_mask.nii.gz'
             MASK_128_PATH = MASK_128_SET + '/' + CT_NAME + '_mask.nii.gz'
-            # mask_16 = sitk.ReadImage(MASK_16_PATH)
-            # mask_32 = sitk.ReadImage(MASK_32_PATH)
-            # mask_16_array = sitk.GetArrayFromImage(mask_16)
-            # mask_32_array = sitk.GetArrayFromImage(mask_32)
-            # mask_16_tensor = torch.tensor(mask_16_array, dtype=torch.float, requires_grad=True, device=device)
-            # mask_32_tensor = torch.tensor(mask_32_array, dtype=torch.float, requires_grad=True, device=device)
             param, det_size, ct_vol, ray_proj_mov, corner_pt, norm_factor \
                 = input_param(CT_128_PATH, BATCH_SIZE, 4, 256, zFlip, device)
 
@@ -127,7 +118,6 @@ def train():
                 = init_rtvec_train(BATCH_SIZE, device, norm_factor)
 
             target = torch.zeros((BATCH_SIZE, 1, det_size, det_size), device=device)
-            # print(str(slice_num))
             with torch.no_grad():
                 target = initmodel(ct_vol, ray_proj_mov, transform_mat3x4_gt, corner_pt, param)
                 min_tar, _ = torch.min(target.reshape(BATCH_SIZE, -1), dim=-1, keepdim=True)
@@ -177,12 +167,12 @@ def train():
             riem_grad = riem.grad(rtvec.detach().cpu(), rtvec_gt.detach().cpu(), METRIC)
             riem_grad = torch.tensor(riem_grad, dtype=torch.float, requires_grad=False, device=device)
 
-            ### Translation Loss
+            # Translation Loss
             riem_grad_transnorm = riem_grad[:, 3:] / (torch.norm(riem_grad[:, 3:], dim=-1, keepdim=True) + EPS)
             rtvec_grad_transnorm = rtvec_grad[:, 3:] / (torch.norm(rtvec_grad[:, 3:], dim=-1, keepdim=True) + EPS)
             riem_grad_trans_loss = torch.mean(torch.sum((riem_grad_transnorm - rtvec_grad_transnorm) ** 2, dim=-1))
 
-            ### Rotation Loss
+            # Rotation Loss
             riem_grad_rotnorm = riem_grad[:, :3] / (torch.norm(riem_grad[:, :3], dim=-1, keepdim=True) + EPS)
             rtvec_grad_rotnorm = rtvec_grad[:, :3] / (torch.norm(rtvec_grad[:, :3], dim=-1, keepdim=True) + EPS)
             riem_grad_rot_loss = torch.mean(torch.sum((riem_grad_rotnorm - rtvec_grad_rotnorm) ** 2, dim=-1))
