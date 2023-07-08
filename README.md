@@ -40,7 +40,7 @@ pip install -r requirements.txt
 cd ./src
 python train_RTPI_v3.py
 ```
-### Train composite encoders
+### Train composite encoders(fine registration module)
 ```bash
 cd ./src
 python train_composite_encoder.py
