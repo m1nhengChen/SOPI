@@ -280,162 +280,6 @@ def _bilinear_interpolate_no_torch_5D(vol, grid):
 
     return interpolated_vol
 
-
-def cal_ncc(I, J, eps=1e-10):
-    # compute local sums via convolution
-    cross = (I - torch.mean(I)) * (J - torch.mean(J))
-    I_var = (I - torch.mean(I)) * (I - torch.mean(I))
-    J_var = (J - torch.mean(J)) * (J - torch.mean(J))
-
-    cc = torch.sum(cross) / torch.sum(torch.sqrt(I_var * J_var + eps))
-
-    # test = torch.mean(cc)
-    return torch.mean(cc)
-
-
-# Gradient-NCC Loss
-def gradncc(I, J, device='cuda', win=None, eps=1e-10):
-    # compute filters
-    with torch.no_grad():
-        kernel_X = torch.Tensor([[[[1, 0, -1], [2, 0, -2], [1, 0, -1]]]])
-        kernel_X = torch.nn.Parameter(kernel_X, requires_grad=False)
-        kernel_Y = torch.Tensor([[[[1, 2, 1], [0, 0, 0], [-1, -2, -1]]]])
-        kernel_Y = torch.nn.Parameter(kernel_Y, requires_grad=False)
-        SobelX = nn.Conv2d(1, 1, 3, 1, 1, bias=False)
-        SobelX.weight = kernel_X
-        SobelY = nn.Conv2d(1, 1, 3, 1, 1, bias=False)
-        SobelY.weight = kernel_Y
-
-        SobelX = SobelX.to(device)
-        SobelY = SobelY.to(device)
-
-    Ix = SobelX(I)
-    Iy = SobelY(I)
-    Jx = SobelX(J)
-    Jy = SobelY(J)
-
-    return 1 - 0.5 * cal_ncc(Ix, Jx, eps) - 0.5 * cal_ncc(Iy, Jy, eps)
-
-
-# MI loss
-def mi(I, J):
-    I = I.cpu().detach().numpy().flatten()
-    J = J.cpu().detach().numpy().flatten()
-    return 1 - MI(I, J)
-
-
-# NGI loss
-def ngi(I, J, device='cuda'):
-    # compute filters
-    with torch.no_grad():
-        kernel_X = torch.Tensor([[[[1, 0, -1], [2, 0, -2], [1, 0, -1]]]])
-        kernel_X = torch.nn.Parameter(kernel_X, requires_grad=False)
-        kernel_Y = torch.Tensor([[[[1, 2, 1], [0, 0, 0], [-1, -2, -1]]]])
-        kernel_Y = torch.nn.Parameter(kernel_Y, requires_grad=False)
-        SobelX = nn.Conv2d(1, 1, 3, 1, 1, bias=False)
-        SobelX.weight = kernel_X
-        SobelY = nn.Conv2d(1, 1, 3, 1, 1, bias=False)
-        SobelY.weight = kernel_Y
-
-        SobelX = SobelX.to(device)
-        SobelY = SobelY.to(device)
-
-    Ix = SobelX(I)
-    Iy = SobelY(I)
-    Jx = SobelX(J)
-    Jy = SobelY(J)
-
-    Ix = Ix.cpu().detach().numpy().flatten()
-    Iy = Iy.cpu().detach().numpy().flatten()
-    Jx = Jx.cpu().detach().numpy().flatten()
-    Jy = Jy.cpu().detach().numpy().flatten()
-    return 1 - 0.5 * MI(Ix, Jx) - 0.5 * MI(Iy, Jy)
-
-
-# NCC loss
-def ncc(I, J, device='cuda', win=None, eps=1e-10):
-    return 1 - cal_ncc(I, J, eps)
-
-
-# cosine similarity
-def cos_sim(a, b, device='cuda', win=None, eps=1e-10):
-    return torch.sum(torch.multiply(a, b)) / ((torch.sum((a) ** 2) ** 0.5) * (torch.sum((b) ** 2)) ** 0.5 + eps)
-
-
-# NCCL loss
-
-def nccl(I, J, device='cuda', kernel_size=5, win=None, eps=1e-10):
-    '''
-    Normalized cross-correlation (NCCL) based on the LOG
-    operator is obtained. The Laplacian image is obtained by convolution of the reference image
-    and DRR image with the LOG operator. The zero-crossing point in the Laplacian image
-    is no longer needed to obtain the image’s detailed edge. However, two Laplacian images’
-    consistency is directly measured to use image edge and detail information effectively. This
-    paper uses cosine similarity to measure the similarity between Laplacian images.
-    '''
-    # compute filters
-
-    with torch.no_grad():
-        if kernel_size == 5:
-            kernel_LoG = torch.Tensor([[[[-2, -4, -4, -4, -2], [-4, 0, 8, 0, -4], [-4, 8, 24, 8, -4], [-4, 0, 8, 0, -4],
-                                         [-2, -4, -4, -4, -2]]]])
-            kernel_LoG = torch.nn.Parameter(kernel_LoG, requires_grad=False)
-            LoG = nn.Conv2d(1, 1, 5, 1, 1, bias=False)
-        elif kernel_size == 9:
-            kernel_LoG = torch.Tensor([[[[0, 1, 1, 2, 2, 2, 1, 1, 0],
-                                         [1, 2, 4, 5, 5, 5, 4, 2, 1],
-                                         [1, 4, 5, 3, 0, 3, 5, 4, 1],
-                                         [2, 5, 3, -12, -24, -12, 3, 5, 2],
-                                         [2, 5, 0, -24, -40, -24, 0, 5, 2],
-                                         [2, 5, 3, -12, -24, -12, 3, 5, 2],
-                                         [1, 4, 5, 3, 0, 3, 4, 4, 1],
-                                         [1, 2, 4, 5, 5, 5, 4, 2, 1],
-                                         [0, 1, 1, 2, 2, 2, 1, 1, 0]]]])
-            kernel_LoG = torch.nn.Parameter(kernel_LoG, requires_grad=False)
-            LoG = nn.Conv2d(1, 1, 9, 1, 1, bias=False)
-        LoG.weight = kernel_LoG
-        LoG = LoG.to(device)
-    LoG_I = LoG(I)
-    LoG_J = LoG(J)
-    # cosine_similarity
-    return 1.5 - cal_ncc(I, J) - 0.5 * cos_sim(LoG_I, LoG_J)
-
-
-# GD loss
-def gradient_difference(I, J, s=1, device='cuda', win=None, eps=1e-10):
-    # compute filters
-    with torch.no_grad():
-        kernel_X = torch.Tensor([[[[1, 0, -1], [2, 0, -2], [1, 0, -1]]]])
-        kernel_X = torch.nn.Parameter(kernel_X, requires_grad=False)
-        kernel_Y = torch.Tensor([[[[1, 2, 1], [0, 0, 0], [-1, -2, -1]]]])
-        kernel_Y = torch.nn.Parameter(kernel_Y, requires_grad=False)
-        SobelX = nn.Conv2d(1, 1, 3, 1, 1, bias=False)
-        SobelX.weight = kernel_X
-        SobelY = nn.Conv2d(1, 1, 3, 1, 1, bias=False)
-        SobelY.weight = kernel_Y
-
-        SobelX = SobelX.to(device)
-        SobelY = SobelY.to(device)
-
-    Ix = SobelX(I)
-    Iy = SobelY(I)
-    Jx = SobelX(J)
-    Jy = SobelY(J)
-    # compute difference image
-    if s != 1:
-        Idx = Ix - s * Jx
-        Idy = Iy - s * Jy
-    else:
-        Idx = Ix - Jx
-        Idy = Iy - Jy
-    # compute variance of image
-    N = torch.numel(Ix)
-    Av = torch.sum((Ix - torch.mean(Ix)) ** 2) / N
-    Ah = torch.sum((Iy - torch.mean(Iy)) ** 2) / N
-    g = torch.sum(Av / (Av + (Idx) ** 2)) + torch.sum(Ah / (Ah + (Idy) ** 2))
-    return 1 - 0.5 * g / N
-
-
 def set_param(device, proj_parameters):
     proj_parameters = np.array(
         [proj_parameters[0], proj_parameters[2], proj_parameters[1], -proj_parameters[4], -proj_parameters[3],
@@ -620,27 +464,6 @@ def set_matrix(BATCH_SIZE, device, proj_parameters):
     transform_mat3x4 = torch.bmm(rot_mat, trans_mat)[:, :3, :]
     return transform_mat3x4
 
-
-
-def TRE(M_gt, M_pred, pixel_spacing):
-    '''
-    Target registration error (TRE), which is the distance between corresponding points other than the fiducial points
-    after registration.
-    '''
-    # point=
-
-    # point_gt=
-    # point_pred=
-    # differ = point_gt-point_pred
-    n = 2  # the number of benchmark
-    differ = np.array([[1, 2], [3, 3]])
-    differ = differ ** 2
-    # print(differ)
-    # print(differ)
-    tre = np.sqrt(differ.sum() / n) * pixel_spacing
-    print(tre)
-
-
 def ORB(X, Y):
     '''
     Oriented FAST and Rotated BRIEF
@@ -696,3 +519,59 @@ def SURF_distance(X, Y, npoint=20):
     surf_distance = surf_distance[:npoint]
     surf_distance_mean = np.mean(surf_distance)
     return surf_distance_mean
+    
+# Convert pose parameters to rotation-translation vector
+def pose2rtvec(pose, device, norm_factor):
+    rtvec = torch.zeros_like(pose, dtype=torch.float, requires_grad=False, device=device)
+    rtvec[:, 0] = pose[:, 0]
+    rtvec[:, 1] = pose[:, 2]
+    rtvec[:, 2] = pose[:, 1]
+    rtvec[:, 3] = - pose[:, 5]
+    rtvec[:, 4] = - pose[:, 4]
+    rtvec[:, 5] = pose[:, 3]
+    rtvec[:, :3] = rtvec[:, :3] / 180 * PI
+    rtvec[:, 3:] = rtvec[:, 3:] / norm_factor
+    return rtvec
+
+
+# Convert rotation-translation vector to pose parameters
+def rtvec2pose(rtvec, norm_factor, device):
+    pose = torch.zeros_like(rtvec, dtype=torch.float, requires_grad=False, device=device)
+    pose[:, 0] = rtvec[:, 0]
+    pose[:, 1] = rtvec[:, 2]
+    pose[:, 2] = rtvec[:, 1]
+    pose[:, 3] = rtvec[:, 5]
+    pose[:, 4] = - rtvec[:, 4]
+    pose[:, 5] = - rtvec[:, 3]
+    pose[:, :3] = pose[:, :3] * 180 / PI
+    pose[:, 3:] = pose[:, 3:] * norm_factor
+    return pose
+
+
+# Convert pose parameters to transform matrix
+def pose2mat(pose, BATCH_SIZE, device, norm_factor):
+    rtvec = pose2rtvec(pose, device, norm_factor)
+    transform_mat3x4 = set_matrix(BATCH_SIZE, device, rtvec)
+    return transform_mat3x4
+
+
+# Seed everything for random steps
+def seed_everything(seed):
+    random.seed(seed)
+    os.environ['PYTHONHASHSEED'] = str(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+
+
+# Early stop for training
+def early_stop(val_loss, val_loss_list, EARLY_STOP_COUNTER, EARLY_STOP_THRESHOLD):
+    val_loss_min = min(val_loss_list)
+    if val_loss > val_loss_min:
+        EARLY_STOP_COUNTER += 1
+    if EARLY_STOP_COUNTER >= EARLY_STOP_THRESHOLD:
+        return 1
+    return 0
