@@ -20,7 +20,7 @@ x-ray and one pre-operative CT as input.
 - python 3.7 (recommended)
 
 ### Getting Started
-- Install torch, torchvision from https://pytorch.org/. It has been tested with torch 1.13.0 and torchvision 0.8.1.
+- Install torch, torchvision from https://pytorch.org/. It has been tested with torch 1.7.0.
 - Check requirements.txt for dependencies. You can use pip install:
 ```bash
 pip install -r requirements.txt
@@ -37,3 +37,26 @@ If you use this code for your research, please cite our paper:
 }
 ```
 **(PS: The CPU-Net file contains some early immature ideas, it does not have much value for reference)**
+## License
+
+This project is released under the [License Name]. For more details, see the `LICENSE` file.
+
+## Acknowledgements
+
+Special thanks to individuals or organizations who provided assistance, inspiration, or support.
+
+## FAQ
+
+List possible frequently asked questions and their answers.
+
+If you have any other questions, feel free to contact us.
+
+## Changelog
+
+Record updates and improvements for each version.
+
+## Contact
+
+If you need to get in touch with us, you can reach us through the following channels:
+
+- Email: mh_chen@seu.edu.cn
