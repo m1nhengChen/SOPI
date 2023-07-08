@@ -25,6 +25,18 @@ x-ray and one pre-operative CT as input.
 ```bash
 pip install -r requirements.txt
 ```
+### RTPI
+- We strongly recommand you to use the RTPI_v3 model.
+- The average running time list blow are the test results on the RTX 3090.
+
+  |Version | RTPI-V1 | RTPI-V2 | RTPI-V3 |
+  |--------- |---------|---------|---------|
+  |Avg.time |0.15s | 0.069s  | 0.066s  |
+
+```bash
+cd ./src
+python train_RTPI_v3.py
+```
 ## Citation
 If you use this code for your research, please cite our paper:
 ```
@@ -39,17 +51,14 @@ If you use this code for your research, please cite our paper:
 **(PS: The CPU-Net file contains some early immature ideas, it does not have much value for reference)**
 ## Acknowledgements
 
-Special thanks to individuals or organizations who provided assistance, inspiration, or support.
+Special thanks to the students and professors in Jiangsu Provincial Joint International Research
+Laboratory of Medical Information Processing, Southeast University, Nanjing, China, who provided assistance, inspiration and support for our work.
 
 ## FAQ
 
 List possible frequently asked questions and their answers.
 
 If you have any other questions, feel free to contact us.
-
-## Changelog
-
-Record updates and improvements for each version.
 
 ## Contact
 
