@@ -28,7 +28,7 @@ x-ray and one pre-operative CT as input.
 ```bash
 pip install -r requirements.txt
 ```
-### RTPI
+### Train RTPI
 - We strongly recommand you to use the RTPI_v3 model.
 - The average running time list blow are the test results on the RTX 3090.
 
@@ -39,6 +39,11 @@ pip install -r requirements.txt
 ```bash
 cd ./src
 python train_RTPI_v3.py
+```
+### Train composite encoders
+```bash
+cd ./src
+python train_composite_encoder.py
 ```
 ## Citation
 If you use this code for your research, please cite our paper:
