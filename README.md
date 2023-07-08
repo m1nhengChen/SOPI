@@ -1,6 +1,6 @@
 ## Introduction
 
-<img src="/img/framework.png" width="600px"/>
+<img src="/img/framework.png" width="500px"/>
 
 In this [paper](https://arxiv.org/abs/2305.06252), we propose a novel two-stage 2D/3D registration framework,
 Embedded Feature Similarity Optimization with Specific Parameter Initialization (SOPI), which can align the images automatically without a large amount
@@ -10,8 +10,11 @@ to initialize pose parameter and an iterative fine-registration network to align
 two images precisely by using embedded features. The framework estimates the
 transformation parameter that best aligns two images using one intra-operative
 x-ray and one pre-operative CT as input.
-<img src="/img/RTPI.png" width="800px"/>
-<img src="/img/composite_encoder.png" width="900px"/>
+
+<img src="/img/RTPI.png" width="700px"/>
+
+<img src="/img/composite_encoder.png" width="800px"/>
+
 ## Setup
 
 ### Prerequisites
