@@ -37,10 +37,6 @@ If you use this code for your research, please cite our paper:
 }
 ```
 **(PS: The CPU-Net file contains some early immature ideas, it does not have much value for reference)**
-## License
-
-This project is released under the [License Name]. For more details, see the `LICENSE` file.
-
 ## Acknowledgements
 
 Special thanks to individuals or organizations who provided assistance, inspiration, or support.
