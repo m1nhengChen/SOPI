@@ -567,7 +567,7 @@ class Composite_connection_unit(nn.Module):
         return out
 
 
-class fine_regnet(nn.Module):
+class Fine_regnet(nn.Module):
     '''
     This network is used for fine 2d/3d registration
     Joint the task of  global and texture feature extraction
@@ -575,8 +575,8 @@ class fine_regnet(nn.Module):
 
     def __init__(self, use_Leaky_relu=True, bottleneck="Splate-Attention"):
         super(fine_regnet, self).__init__()
-        self.encoderx = RegiEncoder(use_Leaky_relu, bottleneck)
-        self.encodery = RegiEncoder(use_Leaky_relu, bottleneck)
+        self.encoderx = Composite_encoder(use_Leaky_relu, bottleneck)
+        self.encodery = Composite_encoder(use_Leaky_relu, bottleneck)
 
     def forward(self, x, y, rtvec, corner_pt, param):
         src = param[0]
@@ -700,9 +700,9 @@ class CFblock(nn.Module):
         return p3, p4, p5
 
 
-class RegiEncoder(nn.Module):
+class Composite_encoder(nn.Module):
     def __init__(self, use_Leaky_relu=True, bottleneck="Splate-Attention"):
-        super(RegiEncoder, self).__init__()
+        super(Composite_encoder, self).__init__()
         self.stem = stem(1, 4, 16, 128, 64)
         self.branche1_layer1 = CovBlock(16, 64, use_Leaky_relu, bottleneck)
         self.down1 = nn.Conv2d(64, 64, kernel_size=3, padding=1, stride=2)
