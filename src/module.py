@@ -14,6 +14,53 @@ from torch.nn.parameter import Parameter
 
 device = torch.device('cuda')
 
+class BiasFree_LayerNorm(nn.Module):
+    def __init__(self, normalized_shape):
+        super(BiasFree_LayerNorm, self).__init__()
+        if isinstance(normalized_shape, numbers.Integral):
+            normalized_shape = (normalized_shape,)
+        normalized_shape = torch.Size(normalized_shape)
+
+        assert len(normalized_shape) == 1
+
+        self.weight = nn.Parameter(torch.ones(normalized_shape))
+        self.normalized_shape = normalized_shape
+
+    def forward(self, x):
+        sigma = x.var(-1, keepdim=True, unbiased=False)
+        return x / torch.sqrt(sigma + 1e-5) * self.weight
+
+
+class WithBias_LayerNorm(nn.Module):
+    def __init__(self, normalized_shape):
+        super(WithBias_LayerNorm, self).__init__()
+        if isinstance(normalized_shape, numbers.Integral):
+            normalized_shape = (normalized_shape,)
+        normalized_shape = torch.Size(normalized_shape)
+
+        assert len(normalized_shape) == 1
+
+        self.weight = nn.Parameter(torch.ones(normalized_shape))
+        self.bias = nn.Parameter(torch.zeros(normalized_shape))
+        self.normalized_shape = normalized_shape
+
+    def forward(self, x):
+        mu = x.mean(-1, keepdim=True)
+        sigma = x.var(-1, keepdim=True, unbiased=False)
+        return (x - mu) / torch.sqrt(sigma + 1e-5) * self.weight + self.bias
+
+
+class LayerNorm(nn.Module):
+    def __init__(self, dim, LayerNorm_type):
+        super(LayerNorm, self).__init__()
+        if LayerNorm_type == 'BiasFree':
+            self.body = BiasFree_LayerNorm(dim)
+        else:
+            self.body = WithBias_LayerNorm(dim)
+
+    def forward(self, x):
+        d, h, w = x.shape[-3:]
+        return to_5d(self.body(to_3d(x)), d, h, w)
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
@@ -573,7 +620,7 @@ class Fine_regnet(nn.Module):
     Joint the task of  global and texture feature extraction
     '''
 
-    def __init__(self, use_Leaky_relu=True, bottleneck="Splate-Attention"):
+    def __init__(self, use_Leaky_relu=True, bottleneck="Splate-Attention",):
         super(fine_regnet, self).__init__()
         self.encoderx = Composite_encoder(use_Leaky_relu, bottleneck)
         self.encodery = Composite_encoder(use_Leaky_relu, bottleneck)
@@ -602,13 +649,13 @@ class Fine_regnet(nn.Module):
 
 
 class stem(nn.Module):
-    def __init__(self, inchannels, midchannels, outchannels, normchannels1, normchannels2):
+    def __init__(self, inchannels, midchannels, outchannels,LayerNorm_type='WithBias'):
         super(stem, self).__init__()
         self.cov1 = nn.Conv2d(inchannels, midchannels, kernel_size=3, padding=1, stride=2)
-        self.norm1 = nn.LayerNorm(normchannels1)
+        self.norm1 =  LayerNorm(midchannels, LayerNorm_type)
         self.gelu = nn.GELU()
         self.cov2 = nn.Conv2d(midchannels, outchannels, kernel_size=3, padding=1, stride=2)
-        self.norm2 = nn.LayerNorm(normchannels2)
+        self.norm2 =  LayerNorm(outchannels, LayerNorm_type)
 
     def forward(self, x):
         x = self.cov1(x)
@@ -647,13 +694,13 @@ class focal_block(nn.Module):
     Focal NeXt block
     '''
 
-    def __init__(self, n, r, normchannels1, normchannels2):
+    def __init__(self, n, r,LayerNorm_type='WithBias'):
         super(focal_block, self).__init__()
         self.cov1 = nn.Conv2d(n, n, kernel_size=7, stride=1, padding=3, dilation=1, groups=n)
-        self.norm1 = nn.LayerNorm(normchannels1)
+        self.norm1 = LayerNorm(n, LayerNorm_type)
         self.gelu = nn.GELU()
         self.cov2 = nn.Conv2d(n, n, kernel_size=7, stride=1, padding=3 * r, dilation=r, groups=n)
-        self.norm2 = nn.LayerNorm(normchannels2)
+        self.norm2 = LayerNorm(n, LayerNorm_type)
         self.cov3 = conv1x1(n, 4 * n)
         self.cov4 = conv1x1(4 * n, n)
 
@@ -680,13 +727,13 @@ class CFblock(nn.Module):
     and an extremely lightweight transition block to extract and integrate features of different scales
     '''
 
-    def __init__(self, c3, c4, c5, cn1, cn2, r=2):
+    def __init__(self, c3, c4, c5, r=2):
         super(CFblock, self).__init__()
         self.block1 = SplatBottleneck(c3, c3)
         self.down1 = nn.Conv2d(c3, c4, kernel_size=3, padding=1, stride=2)
         self.block2 = SplatBottleneck(c4, c4)
         self.down2 = nn.Conv2d(c4, c5, kernel_size=3, padding=1, stride=2)
-        self.fblock = focal_block(c5, r, cn1, cn2)
+        self.fblock = focal_block(c5, r)
         self.tblock = transition_block(c3, c4, c5)
 
     def forward(self, x):
@@ -703,14 +750,14 @@ class CFblock(nn.Module):
 class Composite_encoder(nn.Module):
     def __init__(self, use_Leaky_relu=True, bottleneck="Splate-Attention"):
         super(Composite_encoder, self).__init__()
-        self.stem = stem(1, 4, 16, 128, 64)
+        self.stem = stem(1, 4, 16)
         self.branche1_layer1 = CovBlock(16, 64, use_Leaky_relu, bottleneck)
         self.down1 = nn.Conv2d(64, 64, kernel_size=3, padding=1, stride=2)
-        self.branche1_layer2 = CFblock(64, 128, 256, 8, 8, 2)
-        self.branche1_layer3 = CFblock(64, 128, 256, 8, 8, 2)
-        self.branche1_layer4 = CFblock(64, 128, 256, 8, 8, 2)
-        self.branche2_layer3 = CFblock(64, 128, 256, 8, 8, 2)
-        self.branche2_layer4 = CFblock(64, 128, 256, 8, 8, 2)
+        self.branche1_layer2 = CFblock(64, 128, 256, 2)
+        self.branche1_layer3 = CFblock(64, 128, 256, 2)
+        self.branche1_layer4 = CFblock(64, 128, 256, 2)
+        self.branche2_layer3 = CFblock(64, 128, 256, 2)
+        self.branche2_layer4 = CFblock(64, 128, 256, 2)
         self.cc3 = Composite_connection_unit(64, 64)
         self.cc4 = Composite_connection_unit(64, 64)
         self.up = nn.UpsamplingBilinear2d(scale_factor=2)
