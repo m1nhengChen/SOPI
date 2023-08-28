@@ -1,5 +1,5 @@
 import torch
-from sklearn.metrics.cluster import mutual_info_score as MI
+from sklearn.metrics.cluster import normalized_mutual_info_score as MI
 from torch import nn
 
 from util import cal_ncc
