@@ -17,11 +17,11 @@ import numbers
 device = torch.device('cuda')
 
 def to_3d(x):
-    return rearrange(x, 'b c d h w -> b (d h w) c')
+    return rearrange(x, 'b c h w -> b (h w) c')
 
 
-def to_5d(x, d, h, w):
-    return rearrange(x, 'b (d h w) c -> b c d h w', h=h, w=w, d=d)
+def to_4d(x, h, w):
+    return rearrange(x, 'b (h w) c -> b c h w', h=h, w=w)
 
 class BiasFree_LayerNorm(nn.Module):
     def __init__(self, normalized_shape):
@@ -68,8 +68,8 @@ class LayerNorm(nn.Module):
             self.body = WithBias_LayerNorm(dim)
 
     def forward(self, x):
-        d, h, w = x.shape[-3:]
-        return to_5d(self.body(to_3d(x)), d, h, w)
+        h, w = x.shape[-2:]
+        return to_4d(self.body(to_3d(x)),h, w)
 
 def conv3x3(in_planes, out_planes, stride=1, groups=1, dilation=1):
     """3x3 convolution with padding"""
