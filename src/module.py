@@ -621,7 +621,7 @@ class Fine_regnet(nn.Module):
     '''
 
     def __init__(self, use_Leaky_relu=True, bottleneck="Splate-Attention",):
-        super(fine_regnet, self).__init__()
+        super(Fine_regnet, self).__init__()
         self.encoderx = Composite_encoder(use_Leaky_relu, bottleneck)
         self.encodery = Composite_encoder(use_Leaky_relu, bottleneck)
 
