@@ -11,8 +11,17 @@ from torch.utils.data import Dataset, DataLoader
 from posevec2mat import pose_vec2mat, inv_pose_vec, raydist_range
 import math
 from torch.nn.parameter import Parameter
+from einops import rearrange
+import numbers
 
 device = torch.device('cuda')
+
+def to_3d(x):
+    return rearrange(x, 'b c d h w -> b (d h w) c')
+
+
+def to_5d(x, d, h, w):
+    return rearrange(x, 'b (d h w) c -> b c d h w', h=h, w=w, d=d)
 
 class BiasFree_LayerNorm(nn.Module):
     def __init__(self, normalized_shape):
