@@ -105,7 +105,6 @@ def test():
 
     _, _, _, _, _, _, _ = model_DeShEnet(
         ct_vol, target, rtvec, corner_pt, param)
-    iter_time = 0.1457
     for iter in range(ITER_STEPS):
         torch.cuda.empty_cache()
         start = time.time()
