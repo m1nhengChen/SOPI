@@ -1,6 +1,6 @@
 numpy==1.21.6
 opencv_contrib_python==3.4.2.17
-Pillow==9.5.0
+Pillow==10.0.1
 rfconv==0.0.2b20210406
 scikit_learn==1.0.2
 SimpleITK==2.2.1
