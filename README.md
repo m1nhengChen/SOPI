@@ -38,7 +38,7 @@ pip install -r requirements.txt
 
 ```bash
 cd ./src
-python train_RTPI_v3.py
+python train_RTPI.py
 ```
 ### Train composite encoders(fine registration module)
 ```bash
