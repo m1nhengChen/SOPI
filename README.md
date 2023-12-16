@@ -56,7 +56,7 @@ If you use this code for your research, please cite our paper:
   year={2023}
 }
 ```
-**(PS: The CPU-Net file contains some early immature ideas, it does not have much value for reference)**
+**(PS:The CPU-Net file contains some early immature ideas, which have limited reference value.)**
 ## Acknowledgements
 
 Special thanks to the students and professors in Jiangsu Provincial Joint International Research
