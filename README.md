@@ -4,7 +4,7 @@
 
 <img src="/img/framework.png" width="500px"/>
 
-In this [paper](https://arxiv.org/abs/2305.06252), we propose a novel two-stage 2D/3D registration framework,
+In this work, we propose a novel two-stage 2D/3D registration framework,
 Embedded Feature Similarity Optimization with Specific Parameter Initialization (SOPI), which can align the images automatically without a large amount
 of real X-ray data for training and weaken the effect of incorrect initialization on
 the registration algorithm. In this framework, we propose a regressive parameterspecific module, Rigid Transformation Parameter Initialization (RTPI) module,
