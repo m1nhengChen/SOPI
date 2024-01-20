@@ -25,7 +25,7 @@ x-ray and one pre-operative CT as input.
 - python 3.7 (recommended)
 
 ### Getting Started
-- Install torch, torchvision from https://pytorch.org/. It has been tested with torch 1.7.0.
+- Install torch, torchvision from https://pytorch.org/. It has been tested with torch 1.9.1.
 - Check requirements.txt for dependencies. You can use pip install:
 ```bash
 pip install -r requirements.txt
