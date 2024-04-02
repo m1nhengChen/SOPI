@@ -50,12 +50,13 @@ python train_composite_encoder.py
 ## Citation
 If you use this code for your research, please cite our paper:
 ```
-@article{chen2023embedded,
-  title={Embedded Feature Similarity Optimization with Specific Parameter Initialization for 2D/3D Registration},
+@inproceedings{chen2024embedded,
+  title={Embedded Feature Similarity Optimization with Specific Parameter Initialization for 2D/3D Medical Image Registration},
   author={Chen, Minheng and Zhang, Zhirun and Gu, Shuheng and Kong, Youyong},
-  journal={arXiv e-prints},
-  pages={arXiv--2305},
-  year={2023}
+  booktitle={ICASSP 2024-2024 IEEE International Conference on Acoustics, Speech and Signal Processing (ICASSP)},
+  pages={1521--1525},
+  year={2024},
+  organization={IEEE}
 }
 ```
 **(PS:The CPU-Net file contains some early immature ideas, which have limited reference value.)**
