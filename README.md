@@ -1,4 +1,5 @@
 ## News
+* **2024/5/22** Domain randomization for bridging the domain gap between DRRs and real X-rays is now available at [link](https://github.com/m1nhengChen/cdreg/blob/main/domain_randomization.py)
 * **2023/12/15** Our paper [M Chen, Z Zhang, S Gu, Y Kong, Embedded Feature Similarity Optimization with Specific Parameter Initialization for 2D/3D Medical Image Registration](https://arxiv.org/abs/2305.06252)  has been accepted to [ICASSP 2024](https://2024.ieeeicassp.org/), Seoul, Korea.  :tada:
 ## Introduction
 
